@@ -8,6 +8,7 @@ from utils import normalize_input, compute_data_mean
 from utils.edge_smooth import edge_smooth
 from torchvision.transforms import RandomResizedCrop
 
+extension = {'.jpg', '.png', '.bmp','.jpeg', '.JPG', '.JPEG'}
 
 class AnimeDataSet(Dataset):
     def __init__(self, args, transform=None):
@@ -46,7 +47,8 @@ class AnimeDataSet(Dataset):
         self.image_files[self.train] = []
         for root, subdirs, files in os.walk(train_dir):
             for file in files:
-                self.image_files[self.train].append(os.path.join(root, file))
+                if os.path.splitext(file)[-1] in extension:
+                    self.image_files[self.train].append(os.path.join(root, file))
 
         self.transform = transform
 
