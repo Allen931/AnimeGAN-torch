@@ -19,7 +19,7 @@ def parse_args():
 
     parser.add_argument('--checkpoint_dir', type=str, default='./content/checkpoints',
                         help='Directory name to save the checkpoints')
-    parser.add_argument('--test_dir', type=str, default='./content/dataset/test',
+    parser.add_argument('--test_dir', type=str, default='./content/dataset/test/HR_photo',
                         help='Directory name of test photos')
     parser.add_argument('--dataset', type=str, default='Yurucamp',
                         help='what style you want to get')
