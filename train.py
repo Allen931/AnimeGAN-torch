@@ -10,7 +10,6 @@ from src.dataset import AnimeDataSet, ValidationSet
 from multiprocessing import cpu_count
 
 
-
 def collate_fn(batch):
     img, anime, anime_gray, anime_smt_gray = zip(*batch)
     return (
@@ -51,10 +50,14 @@ def parse_args():
     parser.add_argument('--wadvg', type=float, default=300.0, help='Adversarial loss weight for Generator')
     parser.add_argument('--wadvd', type=float, default=300.0, help='Adversarial loss weight for Discriminator')
 
-    parser.add_argument('--wadvd_real', type=float, default=1.7, help='Adversarial loss weight for D of real anime images')
-    parser.add_argument('--wadvd_gray', type=float, default=1.7, help='Adversarial loss weight for D of gray anime images')
-    parser.add_argument('--wadvd_fake', type=float, default=1.7, help='Adversarial loss weight for D of generated anime images')
-    parser.add_argument('--wadvd_smooth', type=float, default=1.0, help='Adversarial loss weight for D of smooth anime images')
+    parser.add_argument('--wadvd_real', type=float, default=1.7,
+                        help='Adversarial loss weight for D of real anime images')
+    parser.add_argument('--wadvd_gray', type=float, default=1.7,
+                        help='Adversarial loss weight for D of gray anime images')
+    parser.add_argument('--wadvd_fake', type=float, default=1.7,
+                        help='Adversarial loss weight for D of generated anime images')
+    parser.add_argument('--wadvd_smooth', type=float, default=1.0,
+                        help='Adversarial loss weight for D of smooth anime images')
 
     parser.add_argument('--wcon', type=float, default=1.5, help='Content loss weight')
     parser.add_argument('--wgray', type=float, default=2.5, help='Grayscale loss weight')
@@ -133,6 +136,7 @@ def main(args):
 
     print("Training finished")
     model.save()
+
 
 if __name__ == '__main__':
     args = parse_args()
