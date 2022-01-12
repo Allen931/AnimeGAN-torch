@@ -117,6 +117,7 @@ class AnimeDataSet(Dataset):
 
         return normalize_input(img)
 
+
 class ValidationSet(Dataset):
     def __init__(self, args, mean, transform=None):
         self.mean = mean
@@ -147,5 +148,36 @@ class ValidationSet(Dataset):
         img = img.astype(np.float32)
         if addmean:
             img += self.mean
+
+        return normalize_input(img)
+
+
+class TestSet(Dataset):
+    def __init__(self, args, transform=None):
+        self.transform = transform
+
+        test_dir = os.path.join(args.test_dir)
+        if not os.path.exists(test_dir):
+            raise FileNotFoundError(f'Folder {test_dir} does not exist')
+
+        files = os.listdir(test_dir)
+        self.image_files = [os.path.join(test_dir, fi) for fi in files]
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, index):
+        fpath = self.image_files[index]
+        image = cv2.imread(fpath)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = self._transform(image)
+        image = np.transpose(image, (2, 0, 1))
+        return torch.from_numpy(image)
+
+    def _transform(self, img):
+        if self.transform is not None:
+            img = self.transform(image=img)['image']
+
+        img = img.astype(np.float32)
 
         return normalize_input(img)
