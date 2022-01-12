@@ -51,7 +51,7 @@ def main(args):
 
     dataset = TestSet(args)
 
-    data_loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
+    data_loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=16)
 
     generator = Generator()
     if torch.cuda.is_available():
