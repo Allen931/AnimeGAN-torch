@@ -89,7 +89,7 @@ def main(args):
             fake_img = fake_img.detach().cpu().numpy()
             # Channel first -> channel last
             fake_img = fake_img.transpose(0, 2, 3, 1).squeeze(0)
-            fake_img = adjust_brightness_from_src_to_dst(denormalize_input(fake_img, dtype=np.int16), img)
+            fake_img = denormalize_input(fake_img, dtype=np.int16)
             fake_imgs.append(fake_img)
 
             print(f'Test: {index + 1}/{max_iter}')
