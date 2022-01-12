@@ -32,7 +32,7 @@ def adjust_brightness_from_src_to_dst(dst, src, if_info=None):
         print('Brightness Difference between Original Image and Target', brightness_difference)
 
     # According to the average display brightness
-    dstf = dst * brightness_difference
+    dstf = dst * brightness_difference.cpu().numpy()
 
     # According to the average value of the three-color channel
     # dstf = dst.copy().astype(np.float32)

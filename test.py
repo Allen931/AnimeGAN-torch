@@ -4,6 +4,7 @@ import os
 import cv2
 import numpy as np
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from src.dataset import TestSet
@@ -53,9 +54,16 @@ def main(args):
     data_loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
 
     generator = Generator()
-    if os.path.exists(args.checkpoint_dir):
+    if torch.cuda.is_available():
+        generator = generator.cuda()
+        if len(os.getenv('CUDA_VISIBLE_DEVICES').split(',')) > 1:
+            print(' Using %d GPU(s)' % len(os.getenv('CUDA_VISIBLE_DEVICES').split(',')))
+            generator = nn.DataParallel(generator)
+
+    checkpoint_dir = os.path.join(args.checkpoint_dir, args.dataset, 'gen')
+    if os.path.exists(checkpoint_dir):
         print('Loading %s generator...' % args.dataset)
-        files = [os.path.join(args.checkpoint_dir, f) for f in os.listdir(args.checkpoint_dir) if
+        files = [os.path.join(checkpoint_dir, f) for f in os.listdir(checkpoint_dir) if
                  f.endswith('.pth')]
         file = max(files, key=lambda f: int(f.split('_')[-3]) * 1000000 + int(f.split('_')[-2]))
 
