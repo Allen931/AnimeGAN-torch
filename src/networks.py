@@ -173,7 +173,7 @@ class Discriminator(nn.Module):
 
         in_ch = channels
 
-        for i in range(1, n_layers + 1):
+        for i in range(1, n_layers):
             setattr(self, "conv_s2_%d" % i, nn.Sequential(
                 Conv(in_ch, channels * 2, kernel_size=3, stride=2, padding=1, sn=sn),
                 nn.LeakyReLU(0.2, inplace=True)
@@ -202,7 +202,7 @@ class Discriminator(nn.Module):
     def forward(self, input):
         out = self.conv_0(input)
 
-        for i in range(1, self.n_layers + 1):
+        for i in range(1, self.n_layers):
             out = getattr(self, "conv_s2_%d" % i)(out)
             out = getattr(self, "conv_s1_%d" % i)(out)
 

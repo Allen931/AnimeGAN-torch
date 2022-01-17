@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 
-vgg_mean = torch.tensor([0.485, 0.456, 0.406]).float()
+vgg_mean = torch.tensor([123.68, 116.779, 103.939]).float()
 vgg_std = torch.tensor([0.229, 0.224, 0.225]).float()
 
 if torch.cuda.is_available():
@@ -54,5 +54,5 @@ class Vgg(nn.Module):
         '''
         Expect input in range -1 1
         '''
-        image = (image + 1.0) / 2.0
-        return (image - self.mean) / self.std
+        image = ((image + 1.0) / 2.0) * 255
+        return image - self.mean

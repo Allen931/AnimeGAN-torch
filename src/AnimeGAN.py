@@ -9,7 +9,8 @@ import torch.optim as optim
 import time
 
 from src.networks import Generator, Discriminator
-from src.losses import GeneratorLoss, DiscriminatorLoss, ContentLoss, GrayscaleLoss, ColorLoss, LossLogger, TotalVariationLoss
+from src.losses import GeneratorLoss, DiscriminatorLoss, ContentLoss, GrayscaleLoss, ColorLoss, LossLogger, \
+    TotalVariationLoss
 from utils import denormalize_input
 
 gaussian_mean = torch.tensor(0.0)
@@ -37,6 +38,8 @@ class AnimeGAN(nn.Module):
         self.args = args
         self.data_loader = data_loader
         self.val_loader = val_loader
+
+        self.val_len = args.val_len
 
         self.dataset = args.dataset
         self.epoch = 0
@@ -74,7 +77,8 @@ class AnimeGAN(nn.Module):
         loss_grayscale = GrayscaleLoss()
         loss_color = ColorLoss()
         loss_total_variation = TotalVariationLoss()
-        loss_generator = GeneratorLoss(args, loss_content, loss_grayscale, loss_color, loss_total_variation, loss_logger)
+        loss_generator = GeneratorLoss(args, loss_content, loss_grayscale, loss_color, loss_total_variation,
+                                       loss_logger)
         loss_discriminator = DiscriminatorLoss(args, loss_logger)
 
         self.loss_logger = loss_logger
@@ -85,6 +89,7 @@ class AnimeGAN(nn.Module):
 
     def process(self):
         self.generator.train()
+        self.discriminator.train()
 
         self.loss_logger.reset()
 
@@ -257,7 +262,8 @@ class AnimeGAN(nn.Module):
             }, os.path.join(self.dis_weights_path, f'{self.dataset}_{self.epoch}_{iter}_dis.pth'))
             print('Discriminator saved on %s' % self.dis_weights_path)
 
-        save_samples(self.generator, self.val_loader, self.epoch, self.args, iter)
+        save_samples(self.generator, self.discriminator, self.loss_generator, self.loss_discriminator, self.val_loader,
+                     self.epoch, self.args, self.loss_logger, self.val_len, iter)
 
 
 def set_lr(optimizer, lr):
@@ -269,29 +275,48 @@ def gaussian_noise():
     return torch.normal(gaussian_mean, gaussian_std)
 
 
-def save_samples(generator, loader, epoch, args, iter=None):
+def save_samples(generator, discriminator, loss_generator, loss_discriminator, loader, epoch, args, loss_logger, max_iter,
+                 iter=None):
     '''
     Generate and save images
     '''
     generator.eval()
-
-    max_iter = len(loader)
+    discriminator.eval()
+    loss_logger.reset()
 
     fake_imgs = []
 
-    for index, img in enumerate(loader):
+    for index, images in enumerate(loader):
         with torch.no_grad():
+            img, anime, anime_gray, anime_smt_gray = images
+            if torch.cuda.is_available():
+                img = img.cuda()
+                anime = anime.cuda()
+                anime_gray = anime_gray.cuda()
+                anime_smt_gray = anime_smt_gray.cuda()
             if torch.cuda.is_available():
                 img = img.cuda()
             fake_img = generator(img)
+            fake_d = discriminator(fake_img)
+            real_anime_d = discriminator(anime)
+            real_anime_gray_d = discriminator(anime_gray)
+            real_anime_smt_gray_d = discriminator(anime_smt_gray)
+            loss_g = loss_generator(fake_img, img, fake_d, anime_gray)
+            loss_d = loss_discriminator(
+                fake_d, real_anime_d, real_anime_gray_d, real_anime_smt_gray_d)
+            avg_adv, avg_gram, avg_color, avg_content, avg_tv = loss_logger.avg_loss_G()
+            avg_adv_d = loss_logger.avg_loss_D()
+
             fake_img = fake_img.detach().cpu().numpy()
             # Channel first -> channel last
             fake_img = fake_img.transpose(0, 2, 3, 1).squeeze(0)
             fake_imgs.append(denormalize_input(fake_img, dtype=np.int16))
             print(f'Val: {index + 1}/{max_iter}')
+            print(
+                f'Epoch: loss G: adv {avg_adv:2f} con {avg_content:2f} gram {avg_gram:2f} color {avg_color:2f} total variation {avg_tv:2f} / loss D: {avg_adv_d:2f}')
 
-        if index + 1 == max_iter:
-            break
+            if index + 1 == max_iter:
+                break
 
     if iter:
         save_path = os.path.join(args.save_image_dir, args.dataset, f'{epoch}_{iter}')

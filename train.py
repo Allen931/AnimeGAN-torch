@@ -101,7 +101,7 @@ def main(args):
     print("Init models...")
 
     # Create DataLoader
-    dataset = AnimeDataSet(args)
+    dataset = AnimeDataSet(args, args.train_dir)
 
     data_loader = DataLoader(
         dataset,
@@ -112,8 +112,11 @@ def main(args):
         collate_fn=collate_fn,
     )
 
+    val_dataset = ValidationSet(args, args.val_dir)
+    args.val_len = val_dataset.len_train
+
     val_loader = DataLoader(
-        ValidationSet(args, dataset.mean),
+        val_dataset,
         batch_size=1,
         num_workers=cpu_count(),
         pin_memory=True,

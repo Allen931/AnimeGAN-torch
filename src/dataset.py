@@ -8,10 +8,11 @@ from utils import normalize_input, compute_data_mean
 from utils.edge_smooth import edge_smooth
 from torchvision.transforms import RandomResizedCrop
 
-extension = {'.jpg', '.png', '.bmp','.jpeg', '.JPG', '.JPEG'}
+extension = {'.jpg', '.png', '.bmp', '.jpeg', '.JPG', '.JPEG'}
+
 
 class AnimeDataSet(Dataset):
-    def __init__(self, args, transform=None):
+    def __init__(self, args, path, transform=None):
         """
         folder structure:
             - {data_dir}
@@ -20,7 +21,7 @@ class AnimeDataSet(Dataset):
                 - {dataset}  # E.g Hayao
                     1.jpg, ..., n.jpg
         """
-        train_dir = os.path.join(args.train_dir)
+        train_dir = os.path.join(path)
         dataset = args.dataset
         anime_dir = os.path.join(args.anime_dir)
 
@@ -30,12 +31,12 @@ class AnimeDataSet(Dataset):
         if not os.path.exists(anime_dir):
             raise FileNotFoundError(f'Folder {anime_dir} does not exist')
 
-        self.mean = compute_data_mean(anime_dir)
+        self.mean = None
         print(f'Mean(B, G, R) of {dataset} are {self.mean}')
 
         self.debug_samples = args.debug_samples or 0
         self.image_files = {}
-        self.train = 'train_photo'
+        self.train = "train"
         self.anime = dataset
         self.dummy = torch.zeros(3, 256, 256)
 
@@ -56,6 +57,10 @@ class AnimeDataSet(Dataset):
 
     def __len__(self):
         return max(len(self.image_files[self.train]), len(self.image_files[self.anime]))
+
+    @property
+    def len_train(self):
+        return len(self.image_files[self.train])
 
     @property
     def len_anime(self):
@@ -96,7 +101,7 @@ class AnimeDataSet(Dataset):
 
         image_smooth = self.load_anime_smooth(image)
 
-        image = self._transform(image, addmean=True)
+        image = self._transform(image, addmean=False)
         image = np.transpose(image, (2, 0, 1))
 
         return torch.from_numpy(image), torch.from_numpy(image_gray), torch.from_numpy(image_smooth)
@@ -118,38 +123,45 @@ class AnimeDataSet(Dataset):
         return normalize_input(img)
 
 
-class ValidationSet(Dataset):
-    def __init__(self, args, mean, transform=None):
-        self.mean = mean
-        self.transform = transform
-
-        val_dir = os.path.join(args.val_dir)
-        if not os.path.exists(val_dir):
-            raise FileNotFoundError(f'Folder {val_dir} does not exist')
-
-        files = os.listdir(val_dir)
-        self.image_files = [os.path.join(val_dir, fi) for fi in files]
+class ValidationSet(AnimeDataSet):
+    def __init__(self, args, path):
+        super().__init__(args, path)
 
     def __len__(self):
-        return len(self.image_files)
+        return self.len_train
 
-    def __getitem__(self, index):
-        fpath = self.image_files[index]
-        image = cv2.imread(fpath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = self._transform(image, addmean=False)
-        image = np.transpose(image, (2, 0, 1))
-        return torch.from_numpy(image)
 
-    def _transform(self, img, addmean=True):
-        if self.transform is not None:
-            img = self.transform(image=img)['image']
-
-        img = img.astype(np.float32)
-        if addmean:
-            img += self.mean
-
-        return normalize_input(img)
+# def __init__(self, args, mean, transform=None):
+    #     self.mean = mean
+    #     self.transform = transform
+    #
+    #     val_dir = os.path.join(args.val_dir)
+    #     if not os.path.exists(val_dir):
+    #         raise FileNotFoundError(f'Folder {val_dir} does not exist')
+    #
+    #     files = os.listdir(val_dir)
+    #     self.image_files = [os.path.join(val_dir, fi) for fi in files]
+    #
+    # def __len__(self):
+    #     return len(self.image_files)
+    #
+    # def __getitem__(self, index):
+    #     fpath = self.image_files[index]
+    #     image = cv2.imread(fpath)
+    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    #     image = self._transform(image, addmean=False)
+    #     image = np.transpose(image, (2, 0, 1))
+    #     return torch.from_numpy(image)
+    #
+    # def _transform(self, img, addmean=True):
+    #     if self.transform is not None:
+    #         img = self.transform(image=img)['image']
+    #
+    #     img = img.astype(np.float32)
+    #     if addmean:
+    #         img += self.mean
+    #
+    #     return normalize_input(img)
 
 
 class TestSet(Dataset):
