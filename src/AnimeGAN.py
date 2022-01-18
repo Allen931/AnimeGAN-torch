@@ -118,7 +118,7 @@ class AnimeGAN(nn.Module):
                 print(
                     f'[Init Training G] Epoch: {self.epoch:3d} Iteration: {index + 1}/{max_iter} content loss: {avg_content_loss:2f} time: {time.time() - start:.2f}')
 
-                if time.time() - epoch_init > 10800:
+                if time.time() - epoch_init > 3600:
                     self.save(index)
                     self.epoch += 1
                     return
@@ -142,7 +142,7 @@ class AnimeGAN(nn.Module):
 
             if j == self.training_rate:
                 # Train discriminator
-                self.discriminator.train()
+                # self.discriminator.train()
                 self.dis_optimizer.zero_grad()
                 fake_img = self.generator(img).detach()
 
@@ -164,7 +164,7 @@ class AnimeGAN(nn.Module):
                 loss_d.backward()
                 self.dis_optimizer.step()
 
-            self.discriminator.eval()
+            # self.discriminator.eval()
 
             # ---------------- TRAIN G ---------------- #
             self.gen_optimizer.zero_grad()
@@ -191,7 +191,7 @@ class AnimeGAN(nn.Module):
             if j < 1:
                 j = self.training_rate
 
-            if time.time() - epoch_init > 18000:
+            if time.time() - epoch_init > 3600:
                 self.save(index)
                 epoch_init = time.time()
 
@@ -329,3 +329,6 @@ def save_samples(generator, discriminator, loss_generator, loss_discriminator, l
         save_file = os.path.join(save_path, f'{i:03d}.png')
         print(f'* Saving {save_file}')
         cv2.imwrite(save_file, cv2.cvtColor(np.float32(img), cv2.COLOR_BGR2RGB))
+
+    generator.train()
+    discriminator.train()
