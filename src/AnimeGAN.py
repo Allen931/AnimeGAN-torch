@@ -221,7 +221,7 @@ class AnimeGAN(nn.Module):
             print('Loading %s discriminator...' % self.dataset)
             files = [os.path.join(self.dis_weights_path, f) for f in os.listdir(self.dis_weights_path) if
                      f.endswith('.pth')]
-            file = max(files, key=lambda f: int(f.split('_')[-2]))
+            file = max(files, key=lambda f: int(f.split('_')[-3]) * 1000000 + int(f.split('_')[-2]))
 
             if torch.cuda.is_available():
                 data = torch.load(file)
