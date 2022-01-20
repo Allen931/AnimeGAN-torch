@@ -133,7 +133,7 @@ class AnimeGAN(nn.Module):
 
         j = self.training_rate
         for index, images in enumerate(self.data_loader):
-            if index + 1 % 200 == 0:
+            if (index + 1) % 200 == 0:
                 self.loss_logger.reset()
             # To cuda
             start = time.time()
