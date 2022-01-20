@@ -106,7 +106,7 @@ def main(args):
     data_loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
-        num_workers=cpu_count(),
+        num_workers=16,
         pin_memory=True,
         shuffle=True,
         collate_fn=collate_fn,
@@ -118,7 +118,7 @@ def main(args):
     val_loader = DataLoader(
         val_dataset,
         batch_size=1,
-        num_workers=cpu_count(),
+        num_workers=8,
         pin_memory=True,
         shuffle=False,
     )
