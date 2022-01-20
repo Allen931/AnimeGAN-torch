@@ -112,33 +112,48 @@ class Generator(nn.Module):
             ConvNormLReLU(128, 128)
         )
 
-        self.block_c_1 = nn.Sequential(
+        self.block_c = nn.Sequential(
             ConvNormLReLU(128, 128),
             InvertedResBlock(128, 256, 2),
             InvertedResBlock(256, 256, 2),
             InvertedResBlock(256, 256, 2),
             InvertedResBlock(256, 256, 2),
-            InvertedResBlock(256, 256, 2),
+            # InvertedResBlock(256, 256, 2),
             ConvNormLReLU(256, 128),
         )
 
-        self.block_d_1 = nn.Sequential(
+        self.block_d = nn.Sequential(
             ConvNormLReLU(128, 128),
             ConvNormLReLU(128, 128)
         )
 
-        self.block_c_2 = nn.Sequential(
-            ConvNormLReLU(128, 128),
-            InvertedResBlock(128, 256, 2),
-            InvertedResBlock(256, 256, 2),
-            ConvNormLReLU(256, 128),
-        )
+        # self.block_c_1 = nn.Sequential(
+        #     ConvNormLReLU(128, 128),
+        #     InvertedResBlock(128, 256, 2),
+        #     InvertedResBlock(256, 256, 2),
+        #     InvertedResBlock(256, 256, 2),
+        #     InvertedResBlock(256, 256, 2),
+        #     InvertedResBlock(256, 256, 2),
+        #     ConvNormLReLU(256, 128),
+        # )
+        #
+        # self.block_d_1 = nn.Sequential(
+        #     ConvNormLReLU(128, 128),
+        #     ConvNormLReLU(128, 128)
+        # )
 
-        self.block_d_2 = nn.Sequential(
-            ConvNormLReLU(128, 128),
-            ConvNormLReLU(128, 128)
-        )
-
+        # self.block_c_2 = nn.Sequential(
+        #     ConvNormLReLU(128, 128),
+        #     InvertedResBlock(128, 256, 2),
+        #     InvertedResBlock(256, 256, 2),
+        #     ConvNormLReLU(256, 128),
+        # )
+        #
+        # self.block_d_2 = nn.Sequential(
+        #     ConvNormLReLU(128, 128),
+        #     ConvNormLReLU(128, 128)
+        # )
+        #
         self.block_e = nn.Sequential(
             ConvNormLReLU(128, 64),
             ConvNormLReLU(64, 64),
@@ -156,33 +171,34 @@ class Generator(nn.Module):
         out = self.block_a(input)
         half_size = out.size()[-2:]
         out = self.block_b(out)
-        out_1 = self.block_c_1(out)
+        out_1 = self.block_c(out)
 
         if align_corners:
             out_1 = F.interpolate(out_1, half_size, mode="bilinear", align_corners=True)
         else:
             out_1 = F.interpolate(out_1, scale_factor=2, mode="bilinear", align_corners=False)
-        out_1 = self.block_d_1(out_1)
+        out_1 = self.block_d(out_1)
 
         if align_corners:
             out_1 = F.interpolate(out_1, input.size()[-2:], mode="bilinear", align_corners=True)
         else:
             out_1 = F.interpolate(out_1, scale_factor=2, mode="bilinear", align_corners=False)
 
-        out_2 = self.block_c_2(out)
+        # out_2 = self.block_c_2(out)
 
-        if align_corners:
-            out_2 = F.interpolate(out_2, half_size, mode="bilinear", align_corners=True)
-        else:
-            out_2 = F.interpolate(out_2, scale_factor=2, mode="bilinear", align_corners=False)
-        out_2 = self.block_d_2(out_2)
+        # if align_corners:
+        #     out_2 = F.interpolate(out_2, half_size, mode="bilinear", align_corners=True)
+        # else:
+        #     out_2 = F.interpolate(out_2, scale_factor=2, mode="bilinear", align_corners=False)
+        # out_2 = self.block_d_2(out_2)
+        #
+        # if align_corners:
+        #     out_2 = F.interpolate(out_2, input.size()[-2:], mode="bilinear", align_corners=True)
+        # else:
+        #     out_2 = F.interpolate(out_2, scale_factor=2, mode="bilinear", align_corners=False)
+        # out = self.block_e(out_1 + out_2)
 
-        if align_corners:
-            out_2 = F.interpolate(out_2, input.size()[-2:], mode="bilinear", align_corners=True)
-        else:
-            out_2 = F.interpolate(out_2, scale_factor=2, mode="bilinear", align_corners=False)
-        out = self.block_e(out_1 + out_2)
-
+        out = self.block_e(out_1)
         out = self.out_layer(out)
         return out
 

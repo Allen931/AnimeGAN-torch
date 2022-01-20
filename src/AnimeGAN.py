@@ -163,7 +163,7 @@ class AnimeGAN(nn.Module):
                 real_anime_smt_gray_d = self.discriminator(anime_smt_gray)
 
                 loss_d = self.loss_discriminator(
-                    real_anime_gray_d, real_anime_d, fake_d, real_anime_smt_gray_d)
+                    real_anime_d, real_anime_gray_d, fake_d, real_anime_smt_gray_d)
 
                 loss_d.backward()
                 self.dis_optimizer.step()
