@@ -30,7 +30,7 @@ class GeneratorLoss(nn.Module):
     def __call__(self, fake_img, img, fake_logit, anime_gray):
         fake_feat = self.vgg19(fake_img)
         anime_feat = self.vgg19(anime_gray)
-        img_feat = self.vgg19(img).detach()
+        img_feat = self.vgg19(img.detach())
 
         loss_adv = self.wadvg * self.adv_loss_g(fake_logit)
         loss_con = self.wcon * self.content_loss(img_feat, fake_feat)
@@ -104,8 +104,9 @@ class DiscriminatorLoss(nn.Module):
 
 
 class ContentLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, weights=[1.0, 1.0, 1.0, 1.0, 1.0]):
         super(ContentLoss, self).__init__()
+        self.weights = weights
 
         self.l1 = nn.L1Loss()
         if torch.cuda.is_available():
@@ -113,7 +114,14 @@ class ContentLoss(nn.Module):
 
     def __call__(self, feat, re_feat):
         return self.l1(feat, re_feat)
-
+        # content_loss = 0.0
+        # content_loss += self.weights[0] * self.l1(feat['relu1_1'], re_feat['relu1_1'])
+        # content_loss += self.weights[1] * self.l1(feat['relu2_1'], re_feat['relu2_1'])
+        # content_loss += self.weights[2] * self.l1(feat['relu3_1'], re_feat['relu3_1'])
+        # content_loss += self.weights[3] * self.l1(feat['relu4_1'], re_feat['relu4_1'])
+        # content_loss += self.weights[4] * self.l1(feat['relu5_1'], re_feat['relu5_1'])
+        #
+        # return content_loss
 
 class GrayscaleLoss(nn.Module):
     def __init__(self):
@@ -124,6 +132,12 @@ class GrayscaleLoss(nn.Module):
 
     def __call__(self, real, fake):
         return self.l1(gram(real), gram(fake))
+        # style_loss = 0.0
+        # style_loss += self.l1(gram(real['relu2_2']), gram(fake['relu2_2']))
+        # style_loss += self.l1(gram(real['relu3_4']), gram(fake['relu3_4']))
+        # style_loss += self.l1(gram(real['relu4_4']), gram(fake['relu4_4']))
+        # style_loss += self.l1(gram(real['relu5_2']), gram(fake['relu5_2']))
+        # return style_loss
 
 
 class ColorLoss(nn.Module):

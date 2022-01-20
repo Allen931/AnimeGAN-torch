@@ -11,6 +11,7 @@ import time
 from src.networks import Generator, Discriminator
 from src.losses import GeneratorLoss, DiscriminatorLoss, ContentLoss, GrayscaleLoss, ColorLoss, LossLogger, \
     TotalVariationLoss
+from src.vgg19 import Vgg
 from utils import denormalize_input
 
 gaussian_mean = torch.tensor(0.0)
@@ -100,6 +101,7 @@ class AnimeGAN(nn.Module):
         if self.epoch < self.args.init_epochs:
             # Train with content loss only
             set_lr(self.gen_optimizer, self.args.lr_init)
+            vgg = Vgg()
             for index, images in enumerate(self.data_loader):
                 start = time.time()
                 img = images[0]
@@ -109,7 +111,7 @@ class AnimeGAN(nn.Module):
                 self.gen_optimizer.zero_grad()
 
                 fake_img = self.generator(img)
-                loss = self.loss_content(img, fake_img)
+                loss = self.loss_content(vgg(img), vgg(fake_img))
                 loss.backward()
                 self.gen_optimizer.step()
 
@@ -118,7 +120,7 @@ class AnimeGAN(nn.Module):
                 print(
                     f'[Init Training G] Epoch: {self.epoch:3d} Iteration: {index + 1}/{max_iter} content loss: {avg_content_loss:2f} time: {time.time() - start:.2f}')
 
-                if time.time() - epoch_init > 3600:
+                if time.time() - epoch_init >= 1500:
                     self.save(index)
                     self.epoch += 1
                     return
@@ -191,7 +193,7 @@ class AnimeGAN(nn.Module):
             if j < 1:
                 j = self.training_rate
 
-            if time.time() - epoch_init > 3600:
+            if time.time() - epoch_init >= 1800:
                 self.save(index)
                 epoch_init = time.time()
 
