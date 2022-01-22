@@ -70,8 +70,8 @@ class AnimeGAN(nn.Module):
         self.add_module('generator', generator)
         self.add_module('discriminator', discriminator)
 
-        self.gen_optimizer = optim.Adam(generator.parameters(), lr=args.lr_g, betas=(0.5, 0.999))
-        self.dis_optimizer = optim.Adam(discriminator.parameters(), lr=args.lr_d, betas=(0.5, 0.999))
+        self.gen_optimizer = optim.RMSprop(generator.parameters(), lr=args.lr_g)
+        self.dis_optimizer = optim.RMSprop(discriminator.parameters(), lr=args.lr_d)
 
         loss_logger = LossLogger()
         loss_content = ContentLoss()
@@ -163,7 +163,7 @@ class AnimeGAN(nn.Module):
                 real_anime_smt_gray_d = self.discriminator(anime_smt_gray)
 
                 loss_d = self.loss_discriminator(
-                    fake_d, real_anime_d, real_anime_gray_d, real_anime_smt_gray_d)
+                    real_anime_d, real_anime_gray_d, fake_d, real_anime_smt_gray_d)
 
                 loss_d.backward()
                 self.dis_optimizer.step()
@@ -336,3 +336,4 @@ def save_samples(generator, discriminator, loss_generator, loss_discriminator, l
 
     generator.train()
     discriminator.train()
+    loss_logger.reset()

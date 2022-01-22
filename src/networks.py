@@ -139,6 +139,19 @@ class Generator(nn.Module):
             ConvNormLReLU(128, 128)
         )
 
+        self.block_c_3 = nn.Sequential(
+            ConvNormLReLU(128, 128),
+            InvertedResBlock(128, 256, 2),
+            InvertedResBlock(256, 256, 2),
+            ConvNormLReLU(256, 128),
+        )
+
+        self.block_d_3 = nn.Sequential(
+            ConvNormLReLU(128, 128),
+            ConvNormLReLU(128, 128),
+            ConvNormLReLU(128, 128)
+        )
+
         self.block_e = nn.Sequential(
             ConvNormLReLU(128, 64),
             ConvNormLReLU(64, 64),
@@ -181,7 +194,21 @@ class Generator(nn.Module):
             out_2 = F.interpolate(out_2, input.size()[-2:], mode="bilinear", align_corners=True)
         else:
             out_2 = F.interpolate(out_2, scale_factor=2, mode="bilinear", align_corners=False)
-        out = self.block_e(out_1 + out_2)
+
+        out_3 = self.block_c_3(out)
+
+        if align_corners:
+            out_3 = F.interpolate(out_3, half_size, mode="bilinear", align_corners=True)
+        else:
+            out_3 = F.interpolate(out_3, scale_factor=2, mode="bilinear", align_corners=False)
+        out_3 = self.block_d_3(out_3)
+
+        if align_corners:
+            out_3 = F.interpolate(out_3, input.size()[-2:], mode="bilinear", align_corners=True)
+        else:
+            out_3 = F.interpolate(out_3, scale_factor=2, mode="bilinear", align_corners=False)
+
+        out = self.block_e(out_1 + out_2 + out_3)
 
         out = self.out_layer(out)
         return out
